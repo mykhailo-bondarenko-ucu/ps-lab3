@@ -9,8 +9,8 @@ for ((i=0; i<${#services[@]}; i++)); do
     port=$((i+start_port))
     if ! $(screen -list | grep $screen_name > /dev/null); then
         echo "Starting $screen_name ($name) on port $port..."
-        screen -S $screen_name -d -m python3 -m uvicorn $name-service.controller:app --reload --port $port
+        screen -L -S $screen_name -d -m python3 -m uvicorn $name-service.controller:app --reload --port $port
     fi
 done
 
-sleep 2
+sleep 5
