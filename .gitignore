@@ -1,4 +1,5 @@
 screenlog.0
+*.screenlog
 .DS_Store
 __pycache__
 .vscode

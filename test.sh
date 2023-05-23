@@ -18,23 +18,14 @@ for i in {1..10}; do
     bash -x -c "curl -s -d "$msg" http://127.0.0.1:$facade_port/facade_service > /dev/null"
 done
 
-echo "GET result:"
+echo "GET result 1:"
 bash -x -c "curl http://127.0.0.1:$facade_port/facade_service"
 echo
 
-echo "Press enter to start turning off"
-read
+echo "GET result 2:"
+bash -x -c "curl http://127.0.0.1:$facade_port/facade_service"
+echo
 
-stop_ports=(8082 8083)
-for i in $(seq 0 $((${#stop_ports[@]} - 1)) ); do
-    stop_port=${stop_ports[i]}
-    pid=$(lsof -i :$stop_port | awk '{print $2}' | head -n 2 | tail -n 1)
-    echo "Sending SIGINT to localhost:$stop_port (${pid})..."
-    kill ${pid}
-    echo "Shut down a hazelcast member and press enter..."
-    read
-    echo "GET result:"
-    bash -x -c "curl http://127.0.0.1:$facade_port/facade_service"
-    echo
-done
-
+echo "GET result 3:"
+bash -x -c "curl http://127.0.0.1:$facade_port/facade_service"
+echo

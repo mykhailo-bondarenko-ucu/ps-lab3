@@ -2,6 +2,7 @@ import sys
 import httpx
 import random
 import logging
+import hazelcast
 import logging.config
 from .message import Message
 from urllib.parse import urljoin
@@ -18,7 +19,9 @@ class FacadeService:
             "messages-service": [["http://localhost:8085"], 0]
         }
         self.tries = 10
-    
+        self.hz_client = hazelcast.HazelcastClient()
+        self.hz_mq = self.hz_client.get_queue("message-queue")
+
     def select_random_service(self, service_name):
         """Choose in a way that repearts least possible amount of times"""
         service_list, i = self.micro_config[service_name]
@@ -64,6 +67,7 @@ class FacadeService:
     async def add_message(self, msg: str):
         async with httpx.AsyncClient() as client:
             await self.microservice_post(client, "logging-service", "log", Message(msg).json())
+            await self.hz_mq.offer(msg)
 
     async def get_messages(self):
         async with httpx.AsyncClient() as client:
