@@ -1,7 +1,0 @@
-hazelcast:
-  network:
-    rest-api:
-      enabled: true
-      endpoint-groups:
-        CLUSTER_WRITE:
-          enabled: true
