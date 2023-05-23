@@ -1,3 +1,4 @@
+screenlogs/*
 screenlog.0
 *.screenlog
 .DS_Store

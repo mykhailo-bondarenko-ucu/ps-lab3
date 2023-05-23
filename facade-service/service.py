@@ -16,7 +16,7 @@ class FacadeService:
     def __init__(self) -> None:
         self.micro_config = {
             "logging-service": [["http://localhost:8082", "http://localhost:8083", "http://localhost:8084"], 0],
-            "messages-service": [["http://localhost:8085"], 0]
+            "messages-service": [["http://localhost:8085", "http://localhost:8086"], 0]
         }
         self.tries = 10
         self.hz_client = hazelcast.HazelcastClient()
@@ -67,10 +67,10 @@ class FacadeService:
     async def add_message(self, msg: str):
         async with httpx.AsyncClient() as client:
             await self.microservice_post(client, "logging-service", "log", Message(msg).json())
-            await self.hz_mq.offer(msg)
+            self.hz_mq.offer(msg).result()
 
     async def get_messages(self):
         async with httpx.AsyncClient() as client:
             logging_resp = await self.microservice_get(client, "logging-service", "log")
             messages_resp = await self.microservice_get(client, "messages-service", "message")
-        return logging_resp + ": " + messages_resp
+        return logging_resp + ": " + str(messages_resp)
