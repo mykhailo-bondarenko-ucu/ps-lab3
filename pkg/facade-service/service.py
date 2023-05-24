@@ -17,14 +17,20 @@ class FacadeService(ConsulAndHazelcastService):
 
     def __init__(self, port: int) -> None:
         super().__init__(self.service_name, port)
-        self.hz_mq = self.hz_client.get_queue("message-queue")
+        self.tries = 10
+        mq_name = self.consul_client.kv.get("message-queue")[1]['Value'].decode()
+        self.hz_mq = self.hz_client.get_queue(mq_name)
 
     def select_random_service(self, service_name):
         """Choose in a way that repearts least possible amount of times"""
-        service = random.choice(self.consul_client.health.service(service_name)[1])
+        # only those services which are alive and their agents are too, are selected.
+        service = random.choice(list(filter(
+            lambda x: all(check['Status'] == 'passing' for check in x['Checks']),
+            self.consul_client.health.service(service_name)[1]
+        )))
         ip = service['Service']['Address']
         port = service['Service']['Port']
-        address = f"{ip}:{port}"
+        address = f"http://{ip}:{port}"
         logger.info(f"Selected {address}...")
         return address
 

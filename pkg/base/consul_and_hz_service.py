@@ -13,6 +13,7 @@ class ConsulAndHazelcastService:
     def __init__(self, service_name: str, port: int) -> None:
         self.service_definition = {
             "name": service_name,
+            "service_id": f"{service_name}_{port}",
             "address": "127.0.0.1",
             "port": port,
             "check": {
@@ -32,5 +33,5 @@ class ConsulAndHazelcastService:
 
     def deregister_and_shutdown(self):
         self.hz_client.shutdown()
-        self.consul_client.agent.service.deregister(self.service_definition["name"])
+        self.consul_client.agent.service.deregister(self.service_definition["service_id"])
         logger.info("Service removed from Consul.")

@@ -1,6 +1,5 @@
 import sys
 import logging
-import hazelcast
 from ..base.consul_and_hz_service import ConsulAndHazelcastService
 
 logger = logging.getLogger(__name__)
@@ -12,7 +11,8 @@ class HzMessageProcessingService(ConsulAndHazelcastService):
 
     def __init__(self, port: int) -> None:
         super().__init__(self.service_name, port)
-        self.hz_mq = self.hz_client.get_queue("message-queue")
+        mq_name = self.consul_client.kv.get("message-queue")[1]['Value'].decode()
+        self.hz_mq = self.hz_client.get_queue(mq_name)
         self.messages_mem = []
 
     def get_messages(self):
