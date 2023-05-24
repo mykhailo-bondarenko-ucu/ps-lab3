@@ -10,7 +10,7 @@ for ((i=0; i<${#services[@]}; i++)); do
     if ! $(screen -list | grep $screen_name > /dev/null); then
         echo "Starting $screen_name ($name) on port $port..."
         echo logfile screenlogs/$screen_name.screenlog > screenlogs/$screen_name-config
-        screen -L -c screenlogs/$screen_name-config -S $screen_name -d -m python3 -m uvicorn $name-service.controller:app --reload --port $port
+        screen -L -c screenlogs/$screen_name-config -S $screen_name -d -m python3 -m pkg.$name-service.controller --port $port
     fi
 done
 

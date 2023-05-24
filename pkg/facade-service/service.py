@@ -2,38 +2,32 @@ import sys
 import httpx
 import random
 import logging
-import hazelcast
 import logging.config
 from .message import Message
 from urllib.parse import urljoin
 from fastapi import HTTPException
+from ..base.consul_and_hz_service import ConsulAndHazelcastService
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
-class FacadeService:
-    def __init__(self) -> None:
-        self.micro_config = {
-            "logging-service": [["http://localhost:8082", "http://localhost:8083", "http://localhost:8084"], 0],
-            "messages-service": [["http://localhost:8085", "http://localhost:8086"], 0]
-        }
-        self.tries = 10
-        self.hz_client = hazelcast.HazelcastClient()
+class FacadeService(ConsulAndHazelcastService):
+    service_name: str = "facade-service"
+
+    def __init__(self, port: int) -> None:
+        super().__init__(self.service_name, port)
         self.hz_mq = self.hz_client.get_queue("message-queue")
 
     def select_random_service(self, service_name):
         """Choose in a way that repearts least possible amount of times"""
-        service_list, i = self.micro_config[service_name]
-        if i >= len(service_list):
-            random.shuffle(service_list)
-            i = 0
-        address = service_list[i]
-        i += 1
-        self.micro_config[service_name] = [service_list, i]
+        service = random.choice(self.consul_client.health.service(service_name)[1])
+        ip = service['Service']['Address']
+        port = service['Service']['Port']
+        address = f"{ip}:{port}"
         logger.info(f"Selected {address}...")
         return address
-    
+
     async def microservice_get(self, client, micro_name: str, path: str):
         """Get an address, retry 'self.tries' times"""
         logger.info(f"Getting {micro_name}/{path}...")
